@@ -1,0 +1,11 @@
+results/
+logs/
+data/reads/*
+data/reference/*
+!data/reads/.gitkeep
+!data/reference/.gitkeep
+config/*.env
+!config/example.env
+*.bam
+*.bai
+*.mmi

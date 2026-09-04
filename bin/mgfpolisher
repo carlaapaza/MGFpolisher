@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+# shellcheck source=../lib/common.sh
+source "$ROOT/lib/common.sh"
+
+usage() {
+    echo "Usage: mgfpolisher check CONFIG"
+    echo "       mgfpolisher run CONFIG"
+    echo "       mgfpolisher step STEP CONFIG"
+    echo "       mgfpolisher clean CONFIG"
+    echo "  mgfpolisher step 03 CONFIG"
+}
+
+cmd=${1:-}; [[ -n "$cmd" ]] || { usage; exit 2; }
+case "$cmd" in
+    check)
+        [[ $# -eq 2 ]] || { usage; exit 2; }
+        load_config "$2"; "$ROOT/bin/00_check.sh"
+        ;;
+    run)
+        [[ $# -eq 2 ]] || { usage; exit 2; }
+        load_config "$2"
+        for step in 00 01 02 03 04 05 06; do "$ROOT/bin/${step}_"*.sh; done
+        ;;
+    step)
+        [[ $# -eq 3 ]] || { usage; exit 2; }
+        step=$2; load_config "$3"
+        [[ "$step" =~ ^0[0-6]$ ]] || die "step must be 00 through 06"
+        "$ROOT/bin/${step}_"*.sh
+        ;;
+    clean)
+        [[ $# -eq 2 ]] || { usage; exit 2; }
+        load_config "$2"
+        [[ -d "$RUN_DIR" ]] || die "run directory does not exist: $RUN_DIR"
+        read -r -p "Remove only '$RUN_DIR'? [y/N] " answer
+        [[ "$answer" == y || "$answer" == Y ]] || exit 0
+        rm -rf -- "$RUN_DIR"
+        ;;
+    *) usage; exit 2 ;;
+esac
