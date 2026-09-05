@@ -18,7 +18,8 @@ cd ~/Desktop/mgfpolisher
 conda env create -f env/environment.yml
 conda activate mgfpolisher
 cp config/example.env config/my_run.env
-# Edit paths and FAMILY_REGEX in config/my_run.env
+# Put inputs in data/reads and data/reference as named in the config.
+# Edit FAMILY_REGEX in config/my_run.env
 bin/mgfpolisher run config/my_run.env
 ```
 
@@ -27,8 +28,26 @@ a BED file (`FAMILY_BED`) or selected from GFF3 attributes with a case-insensiti
 extended regular expression (`FAMILY_REGEX`). BED takes precedence.
 
 Genome mapping is configurable with `GENOME_MAP_MODE`: use
-`direct-rna-splice` (default), `splice`, or `no-splice`. In non-spliced mode,
+`splice` (default) or `no-splice`. In non-spliced mode,
 `MAP_PRESET` controls the minimap2 preset and defaults to `map-ont`.
+
+Relative input and output paths are resolved from the project folder, even when
+running the command from another directory. Absolute paths remain supported.
+Override inputs at execution time without editing the config:
+
+```bash
+bin/mgfpolisher run config/my_run.env --reads /my/reads.fastq.gz --reference /my/genome.fasta --annotation /my/annotation.gff3
+# Resolve all relative input/output paths under a different folder:
+bin/mgfpolisher run config/my_run.env --data-dir /my/dataset --run-name sample2
+```
+
+`--data-dir` defaults to the project folder; a relative `--data-dir` is resolved
+from the current working directory. Paths passed through the other options use
+that base too. `--family-bed`, `--output-root`, and `--map-mode` are also supported.
+The config filename itself is relative to the current working directory.
+Existing configs using `direct-rna-splice` are accepted as an alias for
+`splice`. Both modes use `-k14`; only `splice` uses `-uf`. Indexes are built
+with the matching preset and k-mer size, separately for each mode/preset.
 
 Useful commands:
 
@@ -46,7 +65,7 @@ mapping summaries, tool versions, and the resolved configuration are retained.
 ## Workflow
 
 1. Validate inputs and record configuration/software versions.
-2. Map direct-RNA reads to the genome using minimap2's direct-RNA splice mode,
+2. Map direct-RNA reads to the genome using minimap2's direct-RNA splice settings,
    retaining secondary hits to avoid discarding multi-mappers.
 3. Select family loci and recover each nominated read in full.
 4. Cluster full reads with CD-HIT-EST.
@@ -56,7 +75,6 @@ mapping summaries, tool versions, and the resolved configuration are retained.
 
 See [docs/METHODS.md](docs/METHODS.md) for assumptions and parameter guidance.
 
-## Citation and license
+## Citation
 
 Please cite minimap2, samtools, SeqKit, CD-HIT, and Racon when using MGFpolisher.
-The repository code is released under the MIT license; see `LICENSE`.

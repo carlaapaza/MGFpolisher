@@ -5,33 +5,36 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source "$ROOT/lib/common.sh"
 
 usage() {
-    echo "Usage: mgfpolisher check CONFIG"
-    echo "       mgfpolisher run CONFIG"
-    echo "       mgfpolisher step STEP CONFIG"
-    echo "       mgfpolisher clean CONFIG"
-    echo "  mgfpolisher step 03 CONFIG"
+    echo "Usage: mgfpolisher check CONFIG [OPTIONS]"
+    echo "       mgfpolisher run CONFIG [OPTIONS]"
+    echo "       mgfpolisher step STEP CONFIG [OPTIONS]"
+    echo "       mgfpolisher clean CONFIG [OPTIONS]"
+    echo "Options: --reads FILE --reference FILE --annotation FILE --family-bed FILE"
+    echo "         --data-dir DIR --output-root DIR --run-name NAME"
+    echo "         --map-mode splice|no-splice"
+    echo "Relative paths use the project root, or --data-dir (relative to your current directory)."
 }
 
 cmd=${1:-}; [[ -n "$cmd" ]] || { usage; exit 2; }
 case "$cmd" in
     check)
-        [[ $# -eq 2 ]] || { usage; exit 2; }
-        load_config "$2"; "$ROOT/bin/00_check.sh"
+        [[ $# -ge 2 ]] || { usage; exit 2; }
+        cfg=$2; shift 2; load_config "$cfg" "$@"; "$ROOT/bin/00_check.sh"
         ;;
     run)
-        [[ $# -eq 2 ]] || { usage; exit 2; }
-        load_config "$2"
+        [[ $# -ge 2 ]] || { usage; exit 2; }
+        cfg=$2; shift 2; load_config "$cfg" "$@"
         for step in 00 01 02 03 04 05 06; do "$ROOT/bin/${step}_"*.sh; done
         ;;
     step)
-        [[ $# -eq 3 ]] || { usage; exit 2; }
-        step=$2; load_config "$3"
+        [[ $# -ge 3 ]] || { usage; exit 2; }
+        step=$2; cfg=$3; shift 3; load_config "$cfg" "$@"
         [[ "$step" =~ ^0[0-6]$ ]] || die "step must be 00 through 06"
         "$ROOT/bin/${step}_"*.sh
         ;;
     clean)
-        [[ $# -eq 2 ]] || { usage; exit 2; }
-        load_config "$2"
+        [[ $# -ge 2 ]] || { usage; exit 2; }
+        cfg=$2; shift 2; load_config "$cfg" "$@"
         [[ -d "$RUN_DIR" ]] || die "run directory does not exist: $RUN_DIR"
         read -r -p "Remove only '$RUN_DIR'? [y/N] " answer
         [[ "$answer" == y || "$answer" == Y ]] || exit 0

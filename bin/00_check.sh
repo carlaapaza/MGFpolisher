@@ -8,8 +8,8 @@ if [[ -n ${FAMILY_BED:-} ]]; then need_file "$FAMILY_BED"; else
 fi
 [[ "$HIT_MODE" == any || "$HIT_MODE" == primary ]] || die "HIT_MODE must be any or primary"
 case "$GENOME_MAP_MODE" in
-  direct-rna-splice|splice|no-splice) ;;
-  *) die "GENOME_MAP_MODE must be direct-rna-splice, splice, or no-splice" ;;
+  splice|no-splice) ;;
+  *) die "GENOME_MAP_MODE must be splice or no-splice" ;;
 esac
 mkdir -p "$RUN_DIR/00_metadata" logs
 {
